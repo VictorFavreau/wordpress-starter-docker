@@ -1,0 +1,46 @@
+version: '3'
+
+version: '3'
+
+services:
+    # Database
+    db:
+        image: mysql:5.7
+        command: --default-authentication-plugin=mysql_native_password
+        volumes:
+        - ./data:/var/lib/mysql
+        restart: always
+        environment:
+            MYSQL_ROOT_PASSWORD: password
+            MYSQL_DATABASE: wordpress
+            MYSQL_USER: wordpress
+            MYSQL_PASSWORD: wordpress
+        ports:
+        - '3306:3306'
+    # phpmyadmin
+    phpmyadmin:
+        depends_on:
+            - db
+        image: phpmyadmin/phpmyadmin
+        restart: always
+        ports:
+            - '8080:80'
+        environment:
+            PMA_HOST: db
+            MYSQL_ROOT_PASSWORD: password 
+    # web
+    web:
+        image: php:7.2.2-apache
+        # can  leave off the default entrypoint of "docker-php-entrypoint"
+        # since what it does isn't necessary here
+        command: "/bin/sh -c 'docker-php-ext-install mysqli && exec apache2-foreground'"
+        container_name: php_web
+        depends_on:
+            - db
+        volumes:
+            - ./wordpress/:/var/www/html/
+            - ./phpconfiguration/uploads.ini:/usr/local/etc/php/conf.d/uploads.ini
+        ports:
+            - "8100:80"
+        stdin_open: true
+        tty: true
